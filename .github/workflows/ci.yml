@@ -53,7 +53,7 @@ jobs:
       id: security
       continue-on-error: true
       run: |
-        trivyyy fs --exit-code 1 --severity HIGH,CRITICAL . > step.log 2>&1 || { cat step.log; exit 1; }
+        trivy fs --exit-code 1 --severity HIGH,CRITICAL . > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Deploy
       if: steps.security.outcome == 'success'

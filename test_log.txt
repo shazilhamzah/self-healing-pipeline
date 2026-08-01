@@ -1,3 +1,0 @@
-Deployment failed.
-Error: OOMKilled - Pod requires more memory (limit was 128Mi).
-Container 'app' terminated with exit code 137.

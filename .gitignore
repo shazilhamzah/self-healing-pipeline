@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+step.log
+analysis.json
+test_log.txt
+test_analysis.json
+.env

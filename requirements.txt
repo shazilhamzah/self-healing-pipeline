@@ -1,2 +1,2 @@
-requests
+requsts==999.9.9
 pytest

@@ -19,7 +19,8 @@ def escalate_issue(root_cause, log_snippet):
     url = f"https://api.github.com/repos/{repo}/issues"
     headers = {
         "Authorization": f"Bearer {github_token}",
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "SelfHealingPipeline/1.0"
     }
     
     body = {

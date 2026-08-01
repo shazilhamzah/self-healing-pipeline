@@ -1,7 +1,8 @@
 import os
 import json
-import requests
 import sys
+import urllib.request
+import urllib.error
 from prompt import SYSTEM_PROMPT
 
 def analyze_log(log_text):
@@ -25,12 +26,16 @@ def analyze_log(log_text):
         "response_format": {"type": "json_object"}
     }
     
-    response = requests.post(url, headers=headers, json=payload)
-    if not response.ok:
-        print(f"Error calling Groq API: {response.text}", file=sys.stderr)
-        response.raise_for_status()
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers=headers, method='POST')
     
-    response_json = response.json()
+    try:
+        with urllib.request.urlopen(req) as response:
+            response_json = json.loads(response.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        print(f"Error calling Groq API: {e.read().decode('utf-8')}", file=sys.stderr)
+        sys.exit(1)
+    
     content = response_json["choices"][0]["message"]["content"]
     
     return json.loads(content)

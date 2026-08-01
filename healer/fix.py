@@ -3,7 +3,8 @@ import sys
 import json
 import datetime
 import subprocess
-import requests
+import urllib.request
+import urllib.error
 
 ALLOWED_FILES = ["k8s/deployment.yaml", "requirements.txt", "jest.config.js", ".github/workflows/ci.yml"]
 
@@ -26,11 +27,18 @@ def escalate_issue(root_cause, log_snippet):
         "body": f"**Root Cause**: {root_cause}\n\n**Log Snippet**:\n```\n{log_snippet}\n```"
     }
     
-    response = requests.post(url, headers=headers, json=body)
-    if response.status_code == 201:
-        print(f"Successfully created GitHub issue: {response.json().get('html_url')}")
-    else:
-        print(f"Failed to create GitHub issue: {response.text}")
+    data = json.dumps(body).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+    
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 201:
+                resp_data = json.loads(response.read().decode('utf-8'))
+                print(f"Successfully created GitHub issue: {resp_data.get('html_url')}")
+            else:
+                print(f"Failed to create GitHub issue: {response.status}")
+    except urllib.error.HTTPError as e:
+        print(f"Failed to create GitHub issue: {e.read().decode('utf-8')}")
 
 def log_attempt(attempt_data):
     log_file = "healer/heal_log.json"

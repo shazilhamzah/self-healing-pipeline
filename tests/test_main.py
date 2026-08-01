@@ -1,2 +1,2 @@
 def test_basic():
-    assert True
+    assert False, "Intentional failure to test escalation path"

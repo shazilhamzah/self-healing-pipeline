@@ -2,6 +2,7 @@ SYSTEM_PROMPT = """You are an expert DevOps engineer and SRE. Your task is to an
 Based on the log, determine if the issue can be safely auto-fixed in the codebase.
 If you can fix it, you MUST return a valid JSON object with the exact find and replace strings for the file to be edited.
 The file must be one of the following: k8s/deployment.yaml, requirements.txt, jest.config.js, .github/workflows/ci.yml.
+HINT: If a bash command is not found (e.g. `pytast: command not found`), the typo is likely in `.github/workflows/ci.yml`. If a pip package is not found, the typo is in `requirements.txt`.
 If the issue cannot be fixed safely by replacing a string in one of these files, set "escalate" to true.
 
 Output ONLY valid JSON. Do not include markdown formatting like ```json or ``` in the output.

@@ -41,7 +41,7 @@ jobs:
       id: test
       continue-on-error: true
       run: |
-        pytest tests/ > step.log 2>&1 || { cat step.log; exit 1; }
+        pytest test/ > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Install Trivy
       if: steps.test.outcome == 'success'

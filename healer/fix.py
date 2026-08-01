@@ -8,11 +8,11 @@ import requests
 ALLOWED_FILES = ["k8s/deployment.yaml", "requirements.txt", "jest.config.js", ".github/workflows/ci.yml"]
 
 def escalate_issue(root_cause, log_snippet):
-    github_token = os.environ.get("GITHUBB_TOKEN")
+    github_token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPO")
     
     if not github_token or not repo:
-        print("Missing GITHUBB_TOKEN or GITHUB_REPO, cannot escalate via GitHub Issue.")
+        print("Missing GITHUB_TOKEN or GITHUB_REPO, cannot escalate via GitHub Issue.")
         return
         
     url = f"https://api.github.com/repos/{repo}/issues"

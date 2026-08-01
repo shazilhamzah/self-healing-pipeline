@@ -1,0 +1,88 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GITHUBB_TOKEN: ${{ secrets.GITHUBB_TOKEN }}
+      GITHUB_REPO: ${{ github.repository }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      id: install
+      continue-on-error: true
+      run: |
+        pip install -r requirements.txt > step.log 2>&1 || { cat step.log; exit 1; }
+
+    - name: Run Tests
+      if: steps.install.outcome == 'success'
+      id: test
+      continue-on-error: true
+      run: |
+        pytest tests/ > step.log 2>&1 || { cat step.log; exit 1; }
+
+    - name: Install Trivy
+      if: steps.test.outcome == 'success'
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Security Scan (Trivy)
+      if: steps.test.outcome == 'success'
+      id: security
+      continue-on-error: true
+      run: |
+        trivy fs --exit-code 1 --severity HIGH,CRITICAL . > step.log 2>&1 || { cat step.log; exit 1; }
+
+    - name: Deploy
+      if: steps.security.outcome == 'success'
+      id: deploy
+      continue-on-error: true
+      run: |
+        {
+          MEM_LIMIT=$(grep -E 'memory:\s*[0-9]+Mi' k8s/deployment.yaml | grep -o '[0-9]\+')
+          if [ -n "$MEM_LIMIT" ] && [ "$MEM_LIMIT" -lt 200 ]; then
+            echo "Deployment failed."
+            echo "Error: OOMKilled - Pod requires more memory (limit was ${MEM_LIMIT}Mi)."
+            echo "Container 'app' terminated with exit code 137."
+            exit 1
+          fi
+          echo "Deployment successful."
+        } > step.log 2>&1 || { cat step.log; exit 1; }
+
+    - name: Capture Logs & Self-Heal
+      if: steps.install.outcome == 'failure' || steps.test.outcome == 'failure' || steps.security.outcome == 'failure' || steps.deploy.outcome == 'failure'
+      run: |
+        echo "Pipeline failed. Captured log:"
+        cat step.log
+        
+        # Calculate HEAL_COUNT from git history (number of contiguous [self-healer] commits at HEAD)
+        export HEAL_COUNT=$(git log -n 10 --format="%s" | awk '/^\[self-healer\]/ {count++} !/^\[self-healer\]/ {print count+0; exit}')
+        if [ -z "$HEAL_COUNT" ]; then
+          # If all 10 commits were self-healer, awk might not exit in the loop, so just default to 10
+          export HEAL_COUNT=$(git log -n 10 --format="%s" | grep -c "^\[self-healer\]" || echo 0)
+        fi
+        echo "Current HEAL_COUNT: $HEAL_COUNT"
+        
+        python healer/analyze.py step.log > analysis.json
+        cat analysis.json
+        
+        python healer/fix.py analysis.json step.log
+        
+        exit 1

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dummy-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dummy-app
+  template:
+    metadata:
+      labels:
+        app: dummy-app
+    spec:
+      containers:
+      - name: app
+        image: python:3.11-slim
+        command: ["python", "-c", "import time; large = []; [large.append(' ' * 10**7) for _ in range(50)]; time.sleep(100)"]
+        resources:
+          limits:
+            memory: 128Mi

@@ -31,13 +31,13 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      id: installl
+      id: install
       continue-on-error: true
       run: |
         pip install -r requirements.txt > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Run Tests
-      if: steps.installl.outcome == 'success'
+      if: steps.install.outcome == 'success'
       id: test
       continue-on-error: true
       run: |
@@ -46,7 +46,7 @@ jobs:
     - name: Install Trivy
       if: steps.test.outcome == 'success'
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/installl.sh | sh -s -- -b /usr/local/bin
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
     - name: Security Scan (Trivy)
       if: steps.test.outcome == 'success'
@@ -72,7 +72,7 @@ jobs:
         } > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Capture Logs & Self-Heal
-      if: steps.installl.outcome == 'failure' || steps.test.outcome == 'failure' || steps.security.outcome == 'failure' || steps.deploy.outcome == 'failure'
+      if: steps.install.outcome == 'failure' || steps.test.outcome == 'failure' || steps.security.outcome == 'failure' || steps.deploy.outcome == 'failure'
       run: |
         echo "Pipeline failed. Captured log:"
         cat step.log

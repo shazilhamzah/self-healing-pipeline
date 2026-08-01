@@ -41,7 +41,7 @@ jobs:
       id: test
       continue-on-error: true
       run: |
-        pytest test/ > step.log 2>&1 || { cat step.log; exit 1; }
+        pytest tests/ > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Install Trivy
       if: steps.test.outcome == 'success'
@@ -53,7 +53,7 @@ jobs:
       id: security
       continue-on-error: true
       run: |
-        trivy fs --exit-code 1 --severity HIGH,CRITICAL . > step.log 2>&1 || { cat step.log; exit 1; }
+        trivyyy fs --exit-code 1 --severity HIGH,CRITICAL . > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Deploy
       if: steps.security.outcome == 'success'

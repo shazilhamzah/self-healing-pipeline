@@ -34,7 +34,7 @@ jobs:
       id: install
       continue-on-error: true
       run: |
-        pip install -r requirements.txt > step.log 2>&1 || { cat step.log; exit 1; }
+        pip instal -r requirements.txt > step.log 2>&1 || { cat step.log; exit 1; }
 
     - name: Run Tests
       if: steps.install.outcome == 'success'
